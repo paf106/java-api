@@ -15,6 +15,9 @@ public class GetProductByIdUseCase {
     private final ProductRepository productRepository;
 
     public Product execute(Long id) {
+        if (id == null) {
+            throw new ProductNotFoundException(null);
+        }
 
         return productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException(id));

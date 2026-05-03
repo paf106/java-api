@@ -31,10 +31,7 @@ public class PostgresProductAdapter implements ProductRepository {
 
     @Override
     public Optional<Product> findById(Long id) {
-        ProductEntity productEntity = jpaProductRepository.findById(id).orElseThrow();
-        Product product = productEntityMapper.toDomain(productEntity);
-
-        return Optional.of(product);
+        return jpaProductRepository.findById(id).map(productEntityMapper::toDomain);
     }
 
     @Override
