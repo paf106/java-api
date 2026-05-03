@@ -1,10 +1,17 @@
 package com.solera.apitest.auth.presentation;
 
 
+import com.solera.apitest.auth.application.models.AuthResult;
+import com.solera.apitest.auth.application.usecases.LoginUserUseCase;
+import com.solera.apitest.auth.application.usecases.RegisterUserUseCase;
+import com.solera.apitest.auth.presentation.dtos.AuthResponseDto;
+import com.solera.apitest.auth.presentation.dtos.LoginRequestDto;
+import com.solera.apitest.auth.presentation.dtos.RegisterRequestDto;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -13,11 +20,27 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AuthController {
 
-    @GetMapping("/login")
-    ResponseEntity<String> getCategoryById(@PathVariable("id") Long id) {
+    private final RegisterUserUseCase registerUserUseCase;
+    private final LoginUserUseCase loginUserUseCase;
 
+    @PostMapping("/register")
+    ResponseEntity<AuthResponseDto> register(@Valid @RequestBody RegisterRequestDto request) {
+        AuthResult authResult = registerUserUseCase.execute(request.email(), request.password());
+        return ResponseEntity.ok(toDto(authResult));
+    }
 
+    @PostMapping("/login")
+    ResponseEntity<AuthResponseDto> login(@Valid @RequestBody LoginRequestDto request) {
+        AuthResult authResult = loginUserUseCase.execute(request.email(), request.password());
+        return ResponseEntity.ok(toDto(authResult));
+    }
 
-        return ResponseEntity.ok("todo ok");
+    private AuthResponseDto toDto(AuthResult authResult) {
+        return new AuthResponseDto(
+                "Bearer",
+                authResult.accessToken(),
+                authResult.userId(),
+                authResult.email()
+        );
     }
 }

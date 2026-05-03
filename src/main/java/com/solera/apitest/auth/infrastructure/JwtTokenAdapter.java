@@ -1,11 +1,16 @@
 package com.solera.apitest.auth.infrastructure;
 
 import com.solera.apitest.auth.domain.repositories.TokenRepository;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 import java.security.Key;
+import java.util.Date;
 
 @Repository
 public class JwtTokenAdapter implements TokenRepository {
@@ -24,16 +29,37 @@ public class JwtTokenAdapter implements TokenRepository {
 
     @Override
     public String generateToken(String username) {
-        return "";
+        Date now = new Date();
+        Date expiresAt = new Date(now.getTime() + expiration);
+
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(now)
+                .setExpiration(expiresAt)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
     }
 
     @Override
     public boolean validateToken(String token) {
-        return false;
+        try {
+            parseClaims(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException ex) {
+            return false;
+        }
     }
 
     @Override
     public String getUsernameFromToken(String token) {
-        return "";
+        return parseClaims(token).getSubject();
+    }
+
+    private Claims parseClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }
